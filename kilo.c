@@ -66,6 +66,8 @@ struct editorConfig E;
 /*** prototypes ***/
 
 void editorSetStatusMessage(const char *fmt, ...);
+void editorRefreshScreen(void);
+char *editorPrompt(char *prompt);
 
 /*** terminal ***/
 void die(const char *s) {
@@ -371,7 +373,13 @@ void editorOpen(char *filename) {
 }
 
 void editorSave(void) {
-    if (E.filename == NULL) return;
+    if (E.filename == NULL) {
+        E.filename = editorPrompt("Save as: %s (ESC to cancel)");
+        if (E.filename == NULL) {
+            editorSetStatusMessage("Save aborted");
+            return;
+        }
+    }
     
     int len;
     char *buf = editorRowsToString(&len);
@@ -534,7 +542,45 @@ void editorSetStatusMessage(const char *fmt, ...) {
     va_end(ap);
     E.statusmsg_time = time(NULL);
 }
+
 /*** input ***/
+
+char *editorPrompt(char *prompt) {
+    size_t bufsize = 128;// initialize size of the buffer string
+    char *buf = malloc(bufsize);// create memory for that string using the buffer size
+
+    size_t buflen = 0; // initialize length of buf string
+    buf[0] = '\0';// set buf first char as null terminator in case of no input
+
+    while (1) {
+        editorSetStatusMessage(prompt, buf);
+        editorRefreshScreen();
+
+        int c = editorReadKey();
+        if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
+            if (buflen != 0) buf[--buflen] = '\0';
+        }
+        else if (c == '\x1b') {
+            editorSetStatusMessage("");
+            free(buf);
+            return NULL;
+        }
+        else if (c == '\r') {
+            if (buflen != 0) {
+                editorSetStatusMessage("");
+                return buf;
+            }
+        }
+        else if (!iscntrl(c) && c < 128) {
+            if (buflen == bufsize - 1) {
+                bufsize *= 2;
+                buf = realloc(buf, bufsize);
+            }
+            buf[buflen++] = c;
+            buf[buflen] = '\0';
+        }
+    }
+}
 
 void editorMoveCursor(int key) {
     erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
