@@ -57,7 +57,7 @@ struct editorSyntax {
     char *filetype; // name of filetype
     char **filematch; // strings containing pattern to match filetype name
     char **keywords; 
-    char *singleline_comment_start // single line comment pattern for filetype
+    char *singleline_comment_start; // single line comment pattern for filetype
     int flags;
 };
 
@@ -94,7 +94,7 @@ char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
 char *C_HL_keywords[] = {"switch", "if", "while", "for", "break", "continue", "return", "else",
                          "struct", "union", "typedef", "static", "enum","class", "case",
                          "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-                         "void|", NULL"}
+                         "void|", NULL};
 
 struct editorSyntax HLDB[] = {
     {
